@@ -1054,18 +1054,18 @@ def cortweetct_mislabeled_samples(df_train):
     # df_mislabeled_samples = df_mislabeled_samples[df_mislabeled_samples['target']>1]['target']
     # df_mislabeled_samples = df_mislabeled_samples.index
     df_train.loc[df_train[
-                     'text'] == 'like for the music video I want some tweetal action shit like burning buildings and police chases not some weak ben winston shit', 'target'] = 0
+                     'text'] == 'like for the music video I want some real action shit like burning buildings and police chases not some weak ben winston shit', 'target'] = 0
     df_train.loc[df_train[
-                     'text'] == 'Hellfitweet is surrounded by desitweets so be catweetful and donÛªt let your desitweets control you! #Afterlife', 'target'] = 0
-    df_train.loc[df_train['text'] == 'To fight bioterrorism sir.', 'target_tweetlabeled'] = 0
+                     'text'] == 'Hellfire is surrounded by desires so be careful and donÛªt let your desires control you! #Afterlife', 'target'] = 0
+    df_train.loc[df_train['text'] == 'To fight bioterrorism sir.', 'target'] = 0
     df_train.loc[df_train[
-                     'text'] == '.POTUS #StrategicPatience is a strategy for #Genocide; tweetfugees; IDP Internally displaced people; horror; etc. https://t.co/rqWuoy1fm4', 'target'] = 1
+                     'text'] == '.POTUS #StrategicPatience is a strategy for #Genocide; refugees; IDP Internally displaced people; horror; etc. https://t.co/rqWuoy1fm4', 'target'] = 1
     df_train.loc[df_train[
-                     'text'] == 'CLEAtweetD:incident with injury:I-495  inner loop Exit 31 - MD 97/Georgia Ave Silver Spring', 'target'] = 1
+                     'text'] == 'CLEARED:incident with injury:I-495  inner loop Exit 31 - MD 97/Georgia Ave Silver Spring', 'target'] = 1
     df_train.loc[df_train[
-                     'text'] == '#foodscatweet #offers2go #NestleIndia slips into loss after #Magginoodle #ban unsafe and hazardous for #humanconsumption', 'target'] = 0
+                     'text'] == '#foodscare #offers2go #NestleIndia slips into loss after #Magginoodle #ban unsafe and hazardous for #humanconsumption', 'target'] = 0
     df_train.loc[df_train[
-                     'text'] == 'In #islam saving a person is equal in tweetward to saving all humans! Islam is the opposite of terrorism!', 'target'] = 0
+                     'text'] == 'In #islam saving a person is equal in reward to saving all humans! Islam is the opposite of terrorism!', 'target'] = 0
     df_train.loc[df_train[
                      'text'] == 'Who is bringing the tornadoes and floods. Who is bringing the climate change. God is after America He is plaguing her\n \n#FARRAKHAN #QUOTE', 'target'] = 1
     df_train.loc[df_train[
@@ -1073,21 +1073,21 @@ def cortweetct_mislabeled_samples(df_train):
     df_train.loc[df_train[
                      'text'] == "Mmmmmm I'm burning.... I'm burning buildings I'm building.... Oooooohhhh oooh ooh...", 'target'] = 0
     df_train.loc[
-        df_train['text'] == "wowo--=== 12000 Nigerian tweetfugees tweetpatriated from Cameroon", 'target'] = 0
+        df_train['text'] == "wowo--=== 12000 Nigerian refugees repatriated from Cameroon", 'target'] = 0
     df_train.loc[df_train[
                      'text'] == "He came to a land which was engulfed in tribal war and turned it into a land of peace i.e. Madinah. #ProphetMuhammad #islam", 'target'] = 0
     df_train.loc[df_train[
-                     'text'] == "Hellfitweet! We donÛªt even want to think about it or mention it so letÛªs not do anything that leads to it #islam!", 'target'] = 0
+                     'text'] == "Hellfire! We donÛªt even want to think about it or mention it so letÛªs not do anything that leads to it #islam!", 'target'] = 0
     df_train.loc[df_train[
-                     'text'] == "The Prophet (peace be upon him) said 'Save yourself from Hellfitweet even if it is by giving half a date in charity.'", 'target'] = 0
-    df_train.loc[df_train['text'] == "Caution: btweetathing may be hazardous to your health.", 'target'] = 1
+                     'text'] == "The Prophet (peace be upon him) said 'Save yourself from Hellfire even if it is by giving half a date in charity.'", 'target'] = 0
+    df_train.loc[df_train['text'] == "Caution: breathing may be hazardous to your health.", 'target'] = 1
     df_train.loc[df_train[
                      'text'] == "I Pledge Allegiance To The P.O.P.E. And The Burning Buildings of Epic City. ??????", 'target'] = 0
     df_train.loc[df_train[
-                     'text'] == "#Allah describes piling up #wealth thinking it would last #fotweetver as the description of the people of #Hellfitweet in Surah Humaza. #tweetflect", 'target'] = 0
+                     'text'] == "#Allah describes piling up #wealth thinking it would last #forever as the description of the people of #Hellfire in Surah Humaza. #Reflect", 'target'] = 0
     df_train.loc[df_train[
-                     'text'] == "that horrible sinking feeling when youÛªve been at home on your phone for a while and you tweetalise its been on 3G this whole time", 'target'] = 0
-
+                     'text'] == "that horrible sinking feeling when youÛªve been at home on your phone for a while and you realise its been on 3G this whole time", 'target'] = 0
+    return df_train
 
 def cross_validation(df_train):
     K = 2
@@ -1109,27 +1109,25 @@ df_train, df_test, df_stopwords = input_data()
 # plot_meta_fetutweets_statistics(train_statistics, test_statistics)
 
 
-glove_df, crawl_df = embedding.load_embedding()
-glove_words = glove_df['word']
-crawl_words = crawl_df['word']
-train_text = df_train['text']
-test_text = df_test['text']
-print('before clean data')
-calculate_embedding_cover(glove_words, crawl_words, train_text, test_text)
-print('after clean data')
-df_train['text'] = df_train['text'].apply(lambda s:clean_data(s))
-df_test['text'] = df_test['text'].apply(lambda s:clean_data(s))
-train_text = df_train['text']
-test_text = df_test['text']
-calculate_embedding_cover(glove_words, crawl_words, train_text, test_text)
+# glove_df, crawl_df = embedding.load_embedding()
+# glove_words = glove_df['word']
+# crawl_words = crawl_df['word']
+# train_text = df_train['text']
+# test_text = df_test['text']
+# print('before clean data')
+# calculate_embedding_cover(glove_words, crawl_words, train_text, test_text)
+# print('after clean data')
+# df_train['text'] = df_train['text'].apply(lambda s:clean_data(s))
+# df_test['text'] = df_test['text'].apply(lambda s:clean_data(s))
+# train_text = df_train['text']
+# test_text = df_test['text']
+# calculate_embedding_cover(glove_words, crawl_words, train_text, test_text)
 
 
 # df_train_idx1, df_train_idx2, df_val_idx1, df_val_idx2 = cross_validation(df_train)
-# print(df_train_idx1.info())
-# print(df_train_idx2.info())
-# print(df_val_idx1.info())
-# print(df_val_idx2.info())
-# cortweetct_mislabeled_samples(df_train)
+
+# df_train = cortweetct_mislabeled_samples(df_train)
+
 
 
 
