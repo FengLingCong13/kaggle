@@ -18,5 +18,5 @@ def load_embedding():
     crawl_df = crawl_df.rename({0: 'word'}, axis='columns')
     return glove_df, crawl_df
 
-load_embedding()
+# load_embedding()
 
