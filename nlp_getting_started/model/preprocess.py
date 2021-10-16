@@ -1,36 +1,36 @@
 # author：FLC
 # time:2021/10/5
-import string
 
+import string
+import re
+import embedding
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn
-
 from sklearn.model_selection import StratifiedKFold
 
-import re
-import embedding
-
-
+# 用于导入数据的函数
 def input_data():
-    path_train = '../data/train.csv'
-    path_test = '../data/test.csv'
-    path_stopwords = '../data/stopwords.txt'
-    df_train = pd.read_csv(path_train, dtype={'text':'str'})
-    df_test = pd.read_csv(path_test, dtype={'text':'str'})
-    df_stopwords = pd.read_csv(path_stopwords,header=None)
+    path_train = '../data/train.csv'   # 训练集数据路径
+    path_test = '../data/test.csv'   # 测试集数据路径
+    path_stopwords = '../data/stopwords.txt'  # 停用词数据路径
+    df_train = pd.read_csv(path_train, dtype={'text':'str'})    # 读取训练集数据
+    df_test = pd.read_csv(path_test, dtype={'text':'str'})   # 读取测试集数据
+    df_stopwords = pd.read_csv(path_stopwords,header=None)   # 读取停用词数据
     return df_train, df_test, df_stopwords
 
 
+# 用于计算原始数据有多少空值的函数
 def count_missing_values(df_train, df_test):
-    train_missing_keyword = df_train['keyword'].isnull().sum()
-    train_missing_location = df_train['location'].isnull().sum()
-    test_missing_keyword = df_test['keyword'].isnull().sum()
-    test_missing_location = df_test['location'].isnull().sum()
+    train_missing_keyword = df_train['keyword'].isnull().sum()   # 统计训练集中keyword空值个数
+    train_missing_location = df_train['location'].isnull().sum()  # 统计训练集中location空值个数
+    test_missing_keyword = df_test['keyword'].isnull().sum()   # 统计测试集中keyword空值个数
+    test_missing_location = df_test['location'].isnull().sum()  # 统计测试集中location空值个数
 
+    # 绘图进行展示
     x = ['keyword', 'location']
-    fig, ax = plt.replaceplots(1, 2)
+    fig, ax = plt.subplots(1, 2)
     ax[0].bar(x, [train_missing_keyword, train_missing_location], color=['blue', 'orange'])
     ax[1].bar(x, [test_missing_keyword, test_missing_location], color=['blue', 'orange'])
     ax[0].set_title('train_data')
@@ -44,63 +44,65 @@ def count_missing_values(df_train, df_test):
     print('test_missing_keyword_per:', round(train_missing_keyword / df_train.shape[0] * 100, 2), '%')
     print('test_missing_location_per:', round(test_missing_location / df_train.shape[0] * 100, 2), '%')
 
-
+# 统计keyword和location不重复的个数
 def count_unique(df_train, df_test):
-    train_unique_keyword = df_train['keyword'].nunique()
-    test_unique_keyword = df_train['keyword'].nunique()
+    train_unique_keyword = df_train['keyword'].nunique()   # 统计训练集keyword中不重复个数
+    test_unique_keyword = df_test['keyword'].nunique()   # 统计测试集keyword中不重复个数
 
-    train_unique_location = df_train['location'].nunique()
-    test_unique_location = df_test['location'].nunique()
+    train_unique_location = df_train['location'].nunique()  # 统计训练集location中不重复个数
+    test_unique_location = df_test['location'].nunique()  # 统计测试集location中不重复个数
 
     print('unique_keyworkd:', train_unique_keyword, '(train)  ', test_unique_keyword, '(test)')
     print('unique_location:', train_unique_location, '(train)  ', test_unique_location, '(test)')
 
 
-def meta_fetutweets_statistics(df_train, df_test, df_stopwords):
-    word_count_train = df_train['text'].apply(lambda x: len(str(x).split())).values.tweetshape((-1, 1))
-    word_count_test = df_test['text'].apply(lambda x: len(str(x).split())).values.tweetshape((-1, 1))
-
-    unique_word_count_train = df_train['text'].apply(lambda x: np.unique(str(x).split()).shape[0]).values.tweetshape(
+# 从数据集text中提取出一些元特征
+def meta_fetures_statistics(df_train, df_test, df_stopwords):
+    # 统计每一个样本单词总数
+    word_count_train = df_train['text'].apply(lambda x: len(str(x).split())).values.reshape((-1, 1))
+    word_count_test = df_test['text'].apply(lambda x: len(str(x).split())).values.reshape((-1, 1))
+    # 统计每一个样本不重复单词的个数
+    unique_word_count_train = df_train['text'].apply(lambda x: np.unique(str(x).split()).shape[0]).values.reshape(
         (-1, 1))
-    unique_word_count_test = df_test['text'].apply(lambda x: np.unique(str(x).split()).shape[0]).values.tweetshape((-1, 1))
-
+    unique_word_count_test = df_test['text'].apply(lambda x: np.unique(str(x).split()).shape[0]).values.reshape((-1, 1))
+    # 统计每一个样本停用词的个数
     stop_word_count_train = df_train['text'].apply(
-        lambda x: len([w for w in str(x).lower().split() if w in df_stopwords[0].tolist()])).values.tweetshape((-1, 1))
+        lambda x: len([w for w in str(x).lower().split() if w in df_stopwords[0].tolist()])).values.reshape((-1, 1))
     stop_word_count_test = df_test['text'].apply(
-        lambda x: len([w for w in str(x).lower().split() if w in df_stopwords[0].tolist()])).values.tweetshape((-1, 1))
-
+        lambda x: len([w for w in str(x).lower().split() if w in df_stopwords[0].tolist()])).values.reshape((-1, 1))
+    # 统计每一个样本url的个数
     url_count_train = df_train['text'].apply(
-        lambda x: len([w for w in str(x).lower().split() if 'http' in w or 'https' in w or 'www' in w])).values.tweetshape((-1, 1))
+        lambda x: len([w for w in str(x).lower().split() if 'http' in w or 'https' in w or 'www' in w])).values.reshape((-1, 1))
     url_count_test = df_test['text'].apply(
-        lambda x: len([w for w in str(x).lower().split() if 'http' in w or 'https' in w or 'www' in w])).values.tweetshape((-1, 1))
-
-    mean_word_length_train = df_train['text'].apply(lambda x: np.mean([len(w) for w in str(x).split()])).values.tweetshape(
+        lambda x: len([w for w in str(x).lower().split() if 'http' in w or 'https' in w or 'www' in w])).values.reshape((-1, 1))
+    # 统计单词的平均长度
+    mean_word_length_train = df_train['text'].apply(lambda x: np.mean([len(w) for w in str(x).split()])).values.reshape(
         (-1, 1))
-    mean_word_length_test = df_test['text'].apply(lambda x: np.mean([len(w) for w in str(x).split()])).values.tweetshape(
+    mean_word_length_test = df_test['text'].apply(lambda x: np.mean([len(w) for w in str(x).split()])).values.reshape(
         (-1, 1))
-
-    char_count_train = df_train['text'].apply(lambda x: len(str(x))).values.tweetshape((-1, 1))
-    char_count_test = df_test['text'].apply(lambda x: len(str(x))).values.tweetshape((-1, 1))
-
+    # 统计每一个样本字符个数
+    char_count_train = df_train['text'].apply(lambda x: len(str(x))).values.reshape((-1, 1))
+    char_count_test = df_test['text'].apply(lambda x: len(str(x))).values.reshape((-1, 1))
+    # 统计每个样本标点符号个数
     punctuation_count_train = df_train['text'].apply(
-        lambda x: len([c for c in str(x) if c in string.punctuation])).values.tweetshape((-1, 1))
+        lambda x: len([c for c in str(x) if c in string.punctuation])).values.reshape((-1, 1))
     punctuation_count_test = df_test['text'].apply(
-        lambda x: len([c for c in str(x) if c in string.punctuation])).values.tweetshape((-1, 1))
-
-    hashtag_count_train = df_train['text'].apply(lambda x: len([c for c in str(x) if c == '#'])).values.tweetshape(
+        lambda x: len([c for c in str(x) if c in string.punctuation])).values.reshape((-1, 1))
+    # 统计每个样本特殊字符个数
+    hashtag_count_train = df_train['text'].apply(lambda x: len([c for c in str(x) if c == '#'])).values.reshape(
         (-1, 1))
-    hashtag_count_test = df_test['text'].apply(lambda x: len([c for c in str(x) if c == '#'])).values.tweetshape(
+    hashtag_count_test = df_test['text'].apply(lambda x: len([c for c in str(x) if c == '#'])).values.reshape(
         (-1, 1))
-
-    mention_count_train = df_train['text'].apply(lambda x: len([c for c in str(x) if c == '@'])).values.tweetshape(
+    # 统计每个样本特殊字符个数
+    mention_count_train = df_train['text'].apply(lambda x: len([c for c in str(x) if c == '@'])).values.reshape(
         (-1, 1))
-    mention_count_test = df_test['text'].apply(lambda x: len([c for c in str(x) if c == '@'])).values.tweetshape(
+    mention_count_test = df_test['text'].apply(lambda x: len([c for c in str(x) if c == '@'])).values.reshape(
         (-1, 1))
     train_statistics = np.concatenate((word_count_train, unique_word_count_train,
                                        stop_word_count_train, url_count_train,
                                        mean_word_length_train, char_count_train,
                                        punctuation_count_train, hashtag_count_train,
-                                       mention_count_train,df_train['target'].values.tweetshape((-1,1))), axis=1)
+                                       mention_count_train,df_train['target'].values.reshape((-1,1))), axis=1)
     test_statistics = np.concatenate((word_count_test, unique_word_count_test,
                                       stop_word_count_test,
                                       url_count_test, mean_word_length_test, char_count_test,
@@ -121,40 +123,40 @@ def meta_fetutweets_statistics(df_train, df_test, df_stopwords):
                                                              'mention_count_test'],dtype=np.int32)
     return train_statistics, test_statistics
 
-
-def plot_meta_fetutweets_statistics(train_statistics, test_statistics):
-    fig, ax = plt.replaceplots(9, 2, figsize=(20, 50))
-
+# 用于打印元特征分布的函数
+def plot_meta_fetures_statistics(train_statistics, test_statistics):
+    fig, ax = plt.subplots(9, 2, figsize=(20, 50))
+    # 打印单词个数的分布
     seaborn.distplot(train_statistics['word_count_train'],ax=ax[0][1], label='train')
     seaborn.distplot(test_statistics['word_count_test'],ax=ax[0][1], label='test')
-
+    # 打印不重复单词个数的分布
     seaborn.distplot(train_statistics['unique_word_count_train'], ax=ax[1][1], label='train')
     seaborn.distplot(test_statistics['unique_word_count_test'], ax=ax[1][1], label='test')
-
+    # 打印停用词个数的分布
     seaborn.distplot(train_statistics['stop_word_count_train'], ax=ax[2][1], label='train')
     seaborn.distplot(test_statistics['stop_word_count_test'], ax=ax[2][1], label='test')
+    # 打印含有url地址的分布
     seaborn.distplot(train_statistics['url_count_train'], ax=ax[3][1], label='train')
     seaborn.distplot(test_statistics['url_count_test'], ax=ax[3][1], label='test')
-
+    # 打印平均单词长度的分布
     seaborn.distplot(train_statistics['mean_word_length_train'], ax=ax[4][1], label='train')
     seaborn.distplot(test_statistics['mean_word_length_test'], ax=ax[4][1], label='test')
-
+    # 打印字符个数的分布
     seaborn.distplot(train_statistics['char_count_train'], ax=ax[5][1], label='train')
     seaborn.distplot(test_statistics['char_count_test'], ax=ax[5][1], label='test')
-
+    # 打印标点符号个数的分布
     seaborn.distplot(train_statistics['punctuation_count_train'], ax=ax[6][1], label='train')
     seaborn.distplot(test_statistics['punctuation_count_test'], ax=ax[6][1], label='test')
-
+    # 打印特殊字符个数的分布
     seaborn.distplot(train_statistics['hashtag_count_train'], ax=ax[7][1], label='train')
     seaborn.distplot(test_statistics['hashtag_count_test'], ax=ax[7][1], label='test')
-
+    # 打印特殊字符个数的分布
     seaborn.distplot(train_statistics['mention_count_train'], ax=ax[8][1], label='train')
     seaborn.distplot(test_statistics['mention_count_test'], ax=ax[8][1], label='test')
 
     TWEETS = train_statistics['train_target'] == 1
     NOT_TWEETS = train_statistics['train_target'] == 0
-
-
+    # 打印训练集中基于灾难和非灾难的单词数量分布
     seaborn.distplot(train_statistics.loc[TWEETS]['word_count_train'], ax=ax[0][0], label='Not Disaster')
     seaborn.distplot(train_statistics.loc[NOT_TWEETS]['word_count_train'], ax=ax[0][0], label='Disaster')
     ax[0][0].legend()
@@ -163,7 +165,7 @@ def plot_meta_fetutweets_statistics(train_statistics, test_statistics):
     ax[0][1].legend()
     ax[0][1].set_title('word_count Distribution')
     ax[0][1].set_xlabel(' ')
-
+    # 打印训练集中基于灾难和非灾难的不重复单词数量的分布
     seaborn.distplot(train_statistics.loc[TWEETS]['unique_word_count_train'], ax=ax[1][0], label='Not Disaster')
     seaborn.distplot(train_statistics.loc[NOT_TWEETS]['unique_word_count_train'], ax=ax[1][0], label='Disaster')
     ax[1][0].legend()
@@ -172,7 +174,7 @@ def plot_meta_fetutweets_statistics(train_statistics, test_statistics):
     ax[1][1].legend()
     ax[1][1].set_title('unique_word_count Distribution')
     ax[1][1].set_xlabel(' ')
-
+    # 打印训练集中基于灾难和非灾难的停用词数量分布
     seaborn.distplot(train_statistics.loc[TWEETS]['stop_word_count_train'], ax=ax[2][0], label='Not Disaster')
     seaborn.distplot(train_statistics.loc[NOT_TWEETS]['stop_word_count_train'], ax=ax[2][0], label='Disaster')
     ax[2][0].legend()
@@ -181,7 +183,7 @@ def plot_meta_fetutweets_statistics(train_statistics, test_statistics):
     ax[2][1].legend()
     ax[2][1].set_title('stop_word_count Distribution')
     ax[2][1].set_xlabel(' ')
-
+    # 打印训练集中基于灾难和非灾难的url数量分布
     seaborn.distplot(train_statistics.loc[TWEETS]['url_count_train'], ax=ax[3][0], label='Not Disaster')
     seaborn.distplot(train_statistics.loc[NOT_TWEETS]['url_count_train'], ax=ax[3][0], label='Disaster')
     ax[3][0].legend()
@@ -190,7 +192,7 @@ def plot_meta_fetutweets_statistics(train_statistics, test_statistics):
     ax[3][1].legend()
     ax[3][1].set_title('url_count Distribution')
     ax[3][1].set_xlabel(' ')
-
+    # 打印训练集中基于灾难和非灾难的平均单词长度分布
     seaborn.distplot(train_statistics.loc[TWEETS]['mean_word_length_train'], ax=ax[4][0], label='Not Disaster')
     seaborn.distplot(train_statistics.loc[NOT_TWEETS]['mean_word_length_train'], ax=ax[4][0], label='Disaster')
     ax[4][0].legend()
@@ -199,7 +201,7 @@ def plot_meta_fetutweets_statistics(train_statistics, test_statistics):
     ax[4][1].legend()
     ax[4][1].set_title('mean_word_length Distribution')
     ax[4][1].set_xlabel(' ')
-
+    # 打印训练集中基于灾难和非灾难的字符个数分布
     seaborn.distplot(train_statistics.loc[TWEETS]['char_count_train'], ax=ax[5][0], label='Not Disaster')
     seaborn.distplot(train_statistics.loc[NOT_TWEETS]['char_count_train'], ax=ax[5][0], label='Disaster')
     ax[5][0].legend()
@@ -208,7 +210,7 @@ def plot_meta_fetutweets_statistics(train_statistics, test_statistics):
     ax[5][1].legend()
     ax[5][1].set_title('char_count Distribution')
     ax[5][1].set_xlabel(' ')
-
+    # 打印训练集中基于灾难和非灾难的标点符号个数分布
     seaborn.distplot(train_statistics.loc[TWEETS]['punctuation_count_train'], ax=ax[6][0], label='Not Disaster')
     seaborn.distplot(train_statistics.loc[NOT_TWEETS]['punctuation_count_train'], ax=ax[6][0], label='Disaster')
     ax[6][0].legend()
@@ -217,7 +219,7 @@ def plot_meta_fetutweets_statistics(train_statistics, test_statistics):
     ax[6][1].legend()
     ax[6][1].set_title('punctuation_count Distribution')
     ax[6][1].set_xlabel(' ')
-
+    # 打印训练集中基于灾难和非灾难的特殊符号个数分布
     seaborn.distplot(train_statistics.loc[TWEETS]['hashtag_count_train'], ax=ax[7][0], label='Not Disaster')
     seaborn.distplot(train_statistics.loc[NOT_TWEETS]['hashtag_count_train'], ax=ax[7][0], label='Disaster')
     ax[7][0].legend()
@@ -226,7 +228,7 @@ def plot_meta_fetutweets_statistics(train_statistics, test_statistics):
     ax[7][1].legend()
     ax[7][1].set_title('hashtag_count Distribution')
     ax[7][1].set_xlabel(' ')
-
+    # 打印训练集中基于灾难和非灾难的特殊符号个数分布
     seaborn.distplot(train_statistics.loc[TWEETS]['mention_count_train'], ax=ax[8][0], label='Not Disaster')
     seaborn.distplot(train_statistics.loc[NOT_TWEETS]['mention_count_train'], ax=ax[8][0], label='Disaster')
     ax[8][0].legend()
@@ -238,41 +240,44 @@ def plot_meta_fetutweets_statistics(train_statistics, test_statistics):
 
     plt.show()
 
+# 计算embedding的单词覆盖率
 def calculate_embedding_cover(glove_words, crawl_words, train_text, test_text):
-    vocab_train = dict()
-    vocab_test = dict()
-    train_text = train_text.apply(lambda s: s.split()).values
-    test_text = test_text.apply(lambda s: s.split()).values
-    for train_line in train_text:
-        for word in train_line:
+    vocab_train = dict()  # 构建一个训练集单词表
+    vocab_test = dict()  # 构建一个测试集单词表
+    train_text = train_text.apply(lambda s: s.split()).values   # 训练集进行分词操作
+    test_text = test_text.apply(lambda s: s.split()).values    # 测试集进行分词操作
+    for train_line in train_text:   # 遍历每一行训练集
+        for word in train_line:  # 遍历每一行中的每个单词
             try:
-                vocab_train[word.lower()] += 1
+                vocab_train[word.lower()] += 1   # 对应单词数量+1
             except KeyError:
-                vocab_train[word.lower()] = 1
-    for test_line in test_text:
-        for word in test_line:
+                vocab_train[word.lower()] = 1   # 如果是新的单词，就创建一个
+    for test_line in test_text:  # 遍历每一行测试集
+        for word in test_line:  # 遍历每一行中的单词
             try:
-                vocab_test[word.lower()] += 1
+                vocab_test[word.lower()] += 1   # 对应单词数量+1
             except KeyError:
-                vocab_test[word.lower()] = 1
+                vocab_test[word.lower()] = 1  # 如果是新单词就创建一个
 
-    glove_cover_train_vocab = 0
-    glove_train_vocab = 0
-    train_word_cover_sum = 0
-    crawl_train_vocab = 0
-    crawl_cover_train_vocab = 0
+    glove_cover_train_vocab = 0  # glove覆盖训练文本单词的个数
+    glove_train_vocab = 0  # glove覆盖字典单词的个数
+    train_word_cover_sum = 0  # 统计所有单词的总数
+    crawl_train_vocab = 0  # crawl覆盖字典单词的个数
+    crawl_cover_train_vocab = 0  # crawl覆盖训练文本单词的个数
 
-    for key, value in vocab_train.items():
-        if key in glove_words.values:
-            glove_train_vocab +=1
-            glove_cover_train_vocab += value
-            train_word_cover_sum += value
+    for key, value in vocab_train.items():  # 遍历单词字典
+        if key in glove_words.values:  # 如果当前单词在glove字典中
+            glove_train_vocab +=1   # glove覆盖字典单词的个数+1
+            glove_cover_train_vocab += value  # glove覆盖训练文本单词的个数+1
+            train_word_cover_sum += value  # 统计所有单词总数
         else:
-            train_word_cover_sum += value
+            train_word_cover_sum += value  # 统计所有单词总数
 
-        if key in crawl_words.values:
-            crawl_train_vocab +=1
-            crawl_cover_train_vocab += value
+        if key in crawl_words.values:  # 如果当前单词在crawl字典中
+            crawl_train_vocab +=1  # crawl覆盖字典单词的个数+1
+            crawl_cover_train_vocab += value  # crawl覆盖训练文本单词的个数+1
+
+    # 这里和上面计算训练集的方法同理
     glove_cover_test_vocab = 0
     glove_test_vocab = 0
     test_word_cover_sum = 0
@@ -291,19 +296,20 @@ def calculate_embedding_cover(glove_words, crawl_words, train_text, test_text):
             crawl_test_vocab += 1
             crawl_cover_test_vocab += value
 
+    # 分别计算glove单词在训练集的单词字典覆盖率和文本单词覆盖率
     glove_train_embedding_cover = glove_train_vocab / len(vocab_train) *100
     glove_train_text_cover = glove_cover_train_vocab / train_word_cover_sum *100
-
+    # 分别计算crawl单词在训练集的单词字典覆盖率和文本单词覆盖率
     crawl_train_embedding_cover = crawl_train_vocab / len(vocab_train)*100
     crawl_train_text_cover = crawl_cover_train_vocab / train_word_cover_sum*100
-
+    # 分别计算glove单词在测试集的单词字典覆盖率和文本单词覆盖率
     glove_test_embedding_cover = glove_test_vocab / len(vocab_test)*100
     glove_test_text_cover = glove_cover_test_vocab / test_word_cover_sum*100
-
+    # 分别计算crawl单词在测试集的单词字典覆盖率和文本单词覆盖率
     crawl_test_embedding_cover = crawl_test_vocab / len(vocab_test)*100
     crawl_test_text_cover = crawl_cover_test_vocab / test_word_cover_sum*100
 
-
+    # 打印结果
     print('Glove Embedding cover ',round(glove_train_embedding_cover,2), '% of vocabulary and ',
           round(glove_train_text_cover,2),'% of Text in Training Set')
     print('Glove Embedding cover ', round(glove_test_embedding_cover,2), '% of vocabulary and ',
@@ -313,6 +319,8 @@ def calculate_embedding_cover(glove_words, crawl_words, train_text, test_text):
     print('Crawl Embedding cover ', round(crawl_test_embedding_cover,2), '% of vocabulary and ',
           round(crawl_test_text_cover,2), '% of Text in Test Set')
 
+
+# 用于进行数据清洗的函数
 def clean_data(tweet):
     # Special characters
     tweet = re.sub(r"\x89Û_", "", tweet)
@@ -1049,10 +1057,14 @@ def clean_data(tweet):
 
         return tweet
 
+# 更改相同样本错误标记
 def cortweetct_mislabeled_samples(df_train):
+    # 展示标记错误的样本
     # df_mislabeled_samples = df_train.groupby('text').nunique().sort_values(by='target', ascending=False)
     # df_mislabeled_samples = df_mislabeled_samples[df_mislabeled_samples['target']>1]['target']
     # df_mislabeled_samples = df_mislabeled_samples.index
+
+    # 手动纠正错误样本
     df_train.loc[df_train[
                      'text'] == 'like for the music video I want some real action shit like burning buildings and police chases not some weak ben winston shit', 'target'] = 0
     df_train.loc[df_train[
@@ -1089,46 +1101,41 @@ def cortweetct_mislabeled_samples(df_train):
                      'text'] == "that horrible sinking feeling when youÛªve been at home on your phone for a while and you realise its been on 3G this whole time", 'target'] = 0
     return df_train
 
-def cross_validation(df_train):
-    K = 2
-    skf = StratifiedKFold(n_splits=K, shuffle=True)
-    train_idx, val_idx = skf.split(df_train['text'], df_train['target'])
-    train_idx1 = train_idx[0]
-    train_idx2 = train_idx[1]
-    val_idx1 = val_idx[0]
-    val_idx2 = val_idx[1]
-    return df_train.loc[train_idx1], df_train.loc[train_idx2], df_train.loc[val_idx1], df_train.loc[val_idx2]
 
+# 用于汇总上述预处理操作的函数
+def preprocess_data():
+    # 导入数据
+    df_train, df_test, df_stopwords = input_data()
+    # 统计数据空缺值
+    count_missing_values(df_train, df_test)
+    # 统计不重复单词的个数
+    count_unique(df_train, df_test)
+    # 元特征统计
+    train_statistics, test_statistics = meta_fetures_statistics(df_train, df_test, df_stopwords)
+    # 打印元特征分布
+    plot_meta_fetures_statistics(train_statistics, test_statistics)
+    # 加载embedding
+    glove_df, crawl_df = embedding.load_embedding()
+    # 取出embedding中的单词
+    glove_words = glove_df['word']
+    crawl_words = crawl_df['word']
+    # 取出训练集和测试集中的text
+    train_text = df_train['text']
+    test_text = df_test['text']
+    # 打印清洗数据前的单词覆盖率
+    print('before clean data')
+    calculate_embedding_cover(glove_words, crawl_words, train_text, test_text)
+    # 打印清洗数据之后的单词覆盖率
+    print('after clean data')
+    df_train['text'] = df_train['text'].apply(lambda s:clean_data(s))
+    df_test['text'] = df_test['text'].apply(lambda s:clean_data(s))
+    train_text = df_train['text']
+    test_text = df_test['text']
+    calculate_embedding_cover(glove_words, crawl_words, train_text, test_text)
+    # 纠正标记错误的样本
+    df_train = cortweetct_mislabeled_samples(df_train)
 
-df_train, df_test, df_stopwords = input_data()
-
-
-# count_missing_values(df_train, df_test)
-# count_unique(df_train, df_test)
-# train_statistics, test_statistics = meta_fetutweets_statistics(df_train, df_test, df_stopwords)
-# plot_meta_fetutweets_statistics(train_statistics, test_statistics)
-
-
-# glove_df, crawl_df = embedding.load_embedding()
-# glove_words = glove_df['word']
-# crawl_words = crawl_df['word']
-# train_text = df_train['text']
-# test_text = df_test['text']
-# print('before clean data')
-# calculate_embedding_cover(glove_words, crawl_words, train_text, test_text)
-# print('after clean data')
-# df_train['text'] = df_train['text'].apply(lambda s:clean_data(s))
-# df_test['text'] = df_test['text'].apply(lambda s:clean_data(s))
-# train_text = df_train['text']
-# test_text = df_test['text']
-# calculate_embedding_cover(glove_words, crawl_words, train_text, test_text)
-
-
-# df_train_idx1, df_train_idx2, df_val_idx1, df_val_idx2 = cross_validation(df_train)
-
-# df_train = cortweetct_mislabeled_samples(df_train)
-
-
+preprocess_data()
 
 
 
