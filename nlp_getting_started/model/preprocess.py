@@ -10,22 +10,23 @@ import numpy as np
 import seaborn
 from sklearn.model_selection import StratifiedKFold
 
+
 # 用于导入数据的函数
 def input_data():
-    path_train = '../data/train.csv'   # 训练集数据路径
-    path_test = '../data/test.csv'   # 测试集数据路径
+    path_train = '../data/train.csv'  # 训练集数据路径
+    path_test = '../data/test.csv'  # 测试集数据路径
     path_stopwords = '../data/stopwords.txt'  # 停用词数据路径
-    df_train = pd.read_csv(path_train, dtype={'text':'str'})    # 读取训练集数据
-    df_test = pd.read_csv(path_test, dtype={'text':'str'})   # 读取测试集数据
-    df_stopwords = pd.read_csv(path_stopwords,header=None)   # 读取停用词数据
+    df_train = pd.read_csv(path_train, dtype={'text': 'str'})  # 读取训练集数据
+    df_test = pd.read_csv(path_test, dtype={'text': 'str'})  # 读取测试集数据
+    df_stopwords = pd.read_csv(path_stopwords, header=None)  # 读取停用词数据
     return df_train, df_test, df_stopwords
 
 
 # 用于计算原始数据有多少空值的函数
 def count_missing_values(df_train, df_test):
-    train_missing_keyword = df_train['keyword'].isnull().sum()   # 统计训练集中keyword空值个数
+    train_missing_keyword = df_train['keyword'].isnull().sum()  # 统计训练集中keyword空值个数
     train_missing_location = df_train['location'].isnull().sum()  # 统计训练集中location空值个数
-    test_missing_keyword = df_test['keyword'].isnull().sum()   # 统计测试集中keyword空值个数
+    test_missing_keyword = df_test['keyword'].isnull().sum()  # 统计测试集中keyword空值个数
     test_missing_location = df_test['location'].isnull().sum()  # 统计测试集中location空值个数
 
     # 绘图进行展示
@@ -44,10 +45,11 @@ def count_missing_values(df_train, df_test):
     print('test_missing_keyword_per:', round(train_missing_keyword / df_train.shape[0] * 100, 2), '%')
     print('test_missing_location_per:', round(test_missing_location / df_train.shape[0] * 100, 2), '%')
 
+
 # 统计keyword和location不重复的个数
 def count_unique(df_train, df_test):
-    train_unique_keyword = df_train['keyword'].nunique()   # 统计训练集keyword中不重复个数
-    test_unique_keyword = df_test['keyword'].nunique()   # 统计测试集keyword中不重复个数
+    train_unique_keyword = df_train['keyword'].nunique()  # 统计训练集keyword中不重复个数
+    test_unique_keyword = df_test['keyword'].nunique()  # 统计测试集keyword中不重复个数
 
     train_unique_location = df_train['location'].nunique()  # 统计训练集location中不重复个数
     test_unique_location = df_test['location'].nunique()  # 统计测试集location中不重复个数
@@ -72,9 +74,11 @@ def meta_fetures_statistics(df_train, df_test, df_stopwords):
         lambda x: len([w for w in str(x).lower().split() if w in df_stopwords[0].tolist()])).values.reshape((-1, 1))
     # 统计每一个样本url的个数
     url_count_train = df_train['text'].apply(
-        lambda x: len([w for w in str(x).lower().split() if 'http' in w or 'https' in w or 'www' in w])).values.reshape((-1, 1))
+        lambda x: len([w for w in str(x).lower().split() if 'http' in w or 'https' in w or 'www' in w])).values.reshape(
+        (-1, 1))
     url_count_test = df_test['text'].apply(
-        lambda x: len([w for w in str(x).lower().split() if 'http' in w or 'https' in w or 'www' in w])).values.reshape((-1, 1))
+        lambda x: len([w for w in str(x).lower().split() if 'http' in w or 'https' in w or 'www' in w])).values.reshape(
+        (-1, 1))
     # 统计单词的平均长度
     mean_word_length_train = df_train['text'].apply(lambda x: np.mean([len(w) for w in str(x).split()])).values.reshape(
         (-1, 1))
@@ -102,7 +106,7 @@ def meta_fetures_statistics(df_train, df_test, df_stopwords):
                                        stop_word_count_train, url_count_train,
                                        mean_word_length_train, char_count_train,
                                        punctuation_count_train, hashtag_count_train,
-                                       mention_count_train,df_train['target'].values.reshape((-1,1))), axis=1)
+                                       mention_count_train, df_train['target'].values.reshape((-1, 1))), axis=1)
     test_statistics = np.concatenate((word_count_test, unique_word_count_test,
                                       stop_word_count_test,
                                       url_count_test, mean_word_length_test, char_count_test,
@@ -113,22 +117,23 @@ def meta_fetures_statistics(df_train, df_test, df_stopwords):
                                                                'stop_word_count_train', 'url_count_train',
                                                                'mean_word_length_train', 'char_count_train',
                                                                'punctuation_count_train', 'hashtag_count_train',
-                                                               'mention_count_train','train_target'],dtype=np.int32)
+                                                               'mention_count_train', 'train_target'], dtype=np.int32)
 
     test_statistics = pd.DataFrame(test_statistics, columns=['word_count_test', 'unique_word_count_test',
                                                              'stop_word_count_test',
                                                              'url_count_test', 'mean_word_length_test',
                                                              'char_count_test',
                                                              'punctuation_count_test', 'hashtag_count_test',
-                                                             'mention_count_test'],dtype=np.int32)
+                                                             'mention_count_test'], dtype=np.int32)
     return train_statistics, test_statistics
+
 
 # 用于打印元特征分布的函数
 def plot_meta_fetures_statistics(train_statistics, test_statistics):
     fig, ax = plt.subplots(9, 2, figsize=(20, 50))
     # 打印单词个数的分布
-    seaborn.distplot(train_statistics['word_count_train'],ax=ax[0][1], label='train')
-    seaborn.distplot(test_statistics['word_count_test'],ax=ax[0][1], label='test')
+    seaborn.distplot(train_statistics['word_count_train'], ax=ax[0][1], label='train')
+    seaborn.distplot(test_statistics['word_count_test'], ax=ax[0][1], label='test')
     # 打印不重复单词个数的分布
     seaborn.distplot(train_statistics['unique_word_count_train'], ax=ax[1][1], label='train')
     seaborn.distplot(test_statistics['unique_word_count_test'], ax=ax[1][1], label='test')
@@ -240,22 +245,23 @@ def plot_meta_fetures_statistics(train_statistics, test_statistics):
 
     plt.show()
 
+
 # 计算embedding的单词覆盖率
 def calculate_embedding_cover(glove_words, crawl_words, train_text, test_text):
     vocab_train = dict()  # 构建一个训练集单词表
     vocab_test = dict()  # 构建一个测试集单词表
-    train_text = train_text.apply(lambda s: s.split()).values   # 训练集进行分词操作
-    test_text = test_text.apply(lambda s: s.split()).values    # 测试集进行分词操作
-    for train_line in train_text:   # 遍历每一行训练集
+    train_text = train_text.apply(lambda s: s.split()).values  # 训练集进行分词操作
+    test_text = test_text.apply(lambda s: s.split()).values  # 测试集进行分词操作
+    for train_line in train_text:  # 遍历每一行训练集
         for word in train_line:  # 遍历每一行中的每个单词
             try:
-                vocab_train[word.lower()] += 1   # 对应单词数量+1
+                vocab_train[word.lower()] += 1  # 对应单词数量+1
             except KeyError:
-                vocab_train[word.lower()] = 1   # 如果是新的单词，就创建一个
+                vocab_train[word.lower()] = 1  # 如果是新的单词，就创建一个
     for test_line in test_text:  # 遍历每一行测试集
         for word in test_line:  # 遍历每一行中的单词
             try:
-                vocab_test[word.lower()] += 1   # 对应单词数量+1
+                vocab_test[word.lower()] += 1  # 对应单词数量+1
             except KeyError:
                 vocab_test[word.lower()] = 1  # 如果是新单词就创建一个
 
@@ -267,14 +273,14 @@ def calculate_embedding_cover(glove_words, crawl_words, train_text, test_text):
 
     for key, value in vocab_train.items():  # 遍历单词字典
         if key in glove_words.values:  # 如果当前单词在glove字典中
-            glove_train_vocab +=1   # glove覆盖字典单词的个数+1
+            glove_train_vocab += 1  # glove覆盖字典单词的个数+1
             glove_cover_train_vocab += value  # glove覆盖训练文本单词的个数+1
             train_word_cover_sum += value  # 统计所有单词总数
         else:
             train_word_cover_sum += value  # 统计所有单词总数
 
         if key in crawl_words.values:  # 如果当前单词在crawl字典中
-            crawl_train_vocab +=1  # crawl覆盖字典单词的个数+1
+            crawl_train_vocab += 1  # crawl覆盖字典单词的个数+1
             crawl_cover_train_vocab += value  # crawl覆盖训练文本单词的个数+1
 
     # 这里和上面计算训练集的方法同理
@@ -297,27 +303,27 @@ def calculate_embedding_cover(glove_words, crawl_words, train_text, test_text):
             crawl_cover_test_vocab += value
 
     # 分别计算glove单词在训练集的单词字典覆盖率和文本单词覆盖率
-    glove_train_embedding_cover = glove_train_vocab / len(vocab_train) *100
-    glove_train_text_cover = glove_cover_train_vocab / train_word_cover_sum *100
+    glove_train_embedding_cover = glove_train_vocab / len(vocab_train) * 100
+    glove_train_text_cover = glove_cover_train_vocab / train_word_cover_sum * 100
     # 分别计算crawl单词在训练集的单词字典覆盖率和文本单词覆盖率
-    crawl_train_embedding_cover = crawl_train_vocab / len(vocab_train)*100
-    crawl_train_text_cover = crawl_cover_train_vocab / train_word_cover_sum*100
+    crawl_train_embedding_cover = crawl_train_vocab / len(vocab_train) * 100
+    crawl_train_text_cover = crawl_cover_train_vocab / train_word_cover_sum * 100
     # 分别计算glove单词在测试集的单词字典覆盖率和文本单词覆盖率
-    glove_test_embedding_cover = glove_test_vocab / len(vocab_test)*100
-    glove_test_text_cover = glove_cover_test_vocab / test_word_cover_sum*100
+    glove_test_embedding_cover = glove_test_vocab / len(vocab_test) * 100
+    glove_test_text_cover = glove_cover_test_vocab / test_word_cover_sum * 100
     # 分别计算crawl单词在测试集的单词字典覆盖率和文本单词覆盖率
-    crawl_test_embedding_cover = crawl_test_vocab / len(vocab_test)*100
-    crawl_test_text_cover = crawl_cover_test_vocab / test_word_cover_sum*100
+    crawl_test_embedding_cover = crawl_test_vocab / len(vocab_test) * 100
+    crawl_test_text_cover = crawl_cover_test_vocab / test_word_cover_sum * 100
 
     # 打印结果
-    print('Glove Embedding cover ',round(glove_train_embedding_cover,2), '% of vocabulary and ',
-          round(glove_train_text_cover,2),'% of Text in Training Set')
-    print('Glove Embedding cover ', round(glove_test_embedding_cover,2), '% of vocabulary and ',
-          round(glove_test_text_cover,2), '% of Text in Test Set')
-    print('Crwal Embedding cover ', round(crawl_train_embedding_cover,2), '% of vocabulary and ',
-          round(crawl_train_text_cover,2), '% of Text in Training Set')
-    print('Crawl Embedding cover ', round(crawl_test_embedding_cover,2), '% of vocabulary and ',
-          round(crawl_test_text_cover,2), '% of Text in Test Set')
+    print('Glove Embedding cover ', round(glove_train_embedding_cover, 2), '% of vocabulary and ',
+          round(glove_train_text_cover, 2), '% of Text in Training Set')
+    print('Glove Embedding cover ', round(glove_test_embedding_cover, 2), '% of vocabulary and ',
+          round(glove_test_text_cover, 2), '% of Text in Test Set')
+    print('Crwal Embedding cover ', round(crawl_train_embedding_cover, 2), '% of vocabulary and ',
+          round(crawl_train_text_cover, 2), '% of Text in Training Set')
+    print('Crawl Embedding cover ', round(crawl_test_embedding_cover, 2), '% of vocabulary and ',
+          round(crawl_test_text_cover, 2), '% of Text in Test Set')
 
 
 # 用于进行数据清洗的函数
@@ -1057,6 +1063,7 @@ def clean_data(tweet):
 
         return tweet
 
+
 # 更改相同样本错误标记
 def cortweetct_mislabeled_samples(df_train):
     # 展示标记错误的样本
@@ -1127,19 +1134,13 @@ def preprocess_data():
     calculate_embedding_cover(glove_words, crawl_words, train_text, test_text)
     # 打印清洗数据之后的单词覆盖率
     print('after clean data')
-    df_train['text'] = df_train['text'].apply(lambda s:clean_data(s))
-    df_test['text'] = df_test['text'].apply(lambda s:clean_data(s))
+    df_train['text'] = df_train['text'].apply(lambda s: clean_data(s))
+    df_test['text'] = df_test['text'].apply(lambda s: clean_data(s))
     train_text = df_train['text']
     test_text = df_test['text']
     calculate_embedding_cover(glove_words, crawl_words, train_text, test_text)
     # 纠正标记错误的样本
     df_train = cortweetct_mislabeled_samples(df_train)
 
+
 preprocess_data()
-
-
-
-
-
-
-

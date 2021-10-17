@@ -14,3 +14,6 @@ data/glove.6B.100d (1).txt
 data/glove.6B.200d.txt
 data/glove.6B.300d.txt
 model/run.ipynb
+model/run2.ipynb
+model/run3.ipynb
+model/run4.ipynb
