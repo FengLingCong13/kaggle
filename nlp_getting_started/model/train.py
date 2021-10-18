@@ -6,10 +6,11 @@ import pandas as pd
 import numpy as np
 import transformers
 import preprocess
+from sklearn.metrics import accuracy_score
 from torch.utils.data import TensorDataset, DataLoader, random_split
 import torch
 
-device = torch.device('cpu')
+device = torch.device('cuda')
 # 导入数据
 df_train, df_test, df_stopwords = preprocess.input_data()
 # 纠正标记错误的样本
@@ -21,8 +22,8 @@ text_values = df_train['text'].values
 labels = df_train['target'].values
 # 创建tokenizer
 tokenizer = transformers.BertTokenizer.from_pretrained('../bert-base-uncased')
-print('Original Text : ', text_values[1])
-print('Tokenized Text: ', tokenizer.tokenize(text_values[1]))
+print('Original Text : ', text_values[1])  # 打印文本
+print('Tokenized Text: ', tokenizer.tokenize(text_values[1]))  # 打印文本转换为token
 print('Token IDs     : ', tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text_values[1])))
 
 
@@ -41,7 +42,7 @@ def encoder_fn(text_list):
 all_inputs_ids = encoder_fn(text_values)  # 对输入进行padding操作
 labels = torch.tensor(labels)  # labels转换为tensor
 
-epochs = 1  # 定义迭代次数
+epochs = 4  # 定义迭代次数
 batch_size = 32  # 定义batchsize
 # TensorDataset是将两个Tensor进行打包，tensor的第一个维度要相同
 dataset = TensorDataset(all_inputs_ids, labels)
@@ -60,15 +61,13 @@ model = transformers.BertForSequenceClassification.from_pretrained('../bert-base
                                                                    num_labels=2, output_attentions=False,
                                                                    output_hidden_states=False)
 
-# model.to(device)
+model.to(device)
 # 定义模型优化器
 optimizer = transformers.AdamW(model.parameters(), lr=2e-5)
 # 计算总的次数
 total_steps = len(train_data) * epochs
 # 定义学习率优化器
 scheduler = transformers.get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=total_steps)
-from sklearn.metrics import f1_score, accuracy_score, recall_score
-
 
 # 统计精度
 def flat_accuary(preds, labels):
